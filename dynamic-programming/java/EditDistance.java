@@ -1,15 +1,45 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class EditDistance {
 
     public static void main(String[] args) {
 
-        Scanner sc = new Scanner(System.in);
+//        Scanner sc = new Scanner(System.in);
+//
+//        String one = sc.nextLine();
+//        String two = sc.nextLine();
+//
+//        System.out.println(distanceIDP(one, two, one.length(), two.length()));
 
-        String one = sc.nextLine();
-        String two = sc.nextLine();
+        List<String> result = new ArrayList<>();
+        generateParenthesis(result, "(", 3, 1, 0);
+        System.out.println(result);
 
-        System.out.println(distanceIDP(one, two, one.length(), two.length()));
+    }
+
+    public static List<String> generateParenthesis(int n) {
+        List<String> result = new ArrayList<>();
+        generateParenthesis(result, "(", n, 1, 0);
+        return result;
+    }
+
+    public static void generateParenthesis(List<String> result, String curr, int n, int opening, int closing) {
+
+        if(closing == n) {
+            result.add(curr);
+            return;
+        }
+
+        if(opening > closing) {
+            generateParenthesis(result, curr + ")", n, opening, closing + 1);
+            generateParenthesis(result, curr + "(", n, opening + 1, closing);
+        }
+
+        if(opening == closing) {
+            generateParenthesis(result, curr + "(", n, opening + 1, closing);
+        }
 
     }
 
