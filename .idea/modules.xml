@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/cses.iml" filepath="$PROJECT_DIR$/.idea/cses.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dynamic-programming/dynamic-programming.iml" filepath="$PROJECT_DIR$/dynamic-programming/dynamic-programming.iml" />
+      <module fileurl="file://$PROJECT_DIR$/graph-algorithms/graph-algorithms.iml" filepath="$PROJECT_DIR$/graph-algorithms/graph-algorithms.iml" />
+      <module fileurl="file://$PROJECT_DIR$/range-queries/range-queries.iml" filepath="$PROJECT_DIR$/range-queries/range-queries.iml" />
+      <module fileurl="file://$PROJECT_DIR$/sorting-searching/sorting-searching.iml" filepath="$PROJECT_DIR$/sorting-searching/sorting-searching.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tree-algorithms/tree-algorithms.iml" filepath="$PROJECT_DIR$/tree-algorithms/tree-algorithms.iml" />
+    </modules>
+  </component>
+</project>

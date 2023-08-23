@@ -7,8 +7,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RoundTrip {
 
@@ -155,16 +157,13 @@ public class RoundTrip {
             adj.get(c2).add(c1);
         }
 
-
-
-        List<Integer> cities = new ArrayList<>();
         boolean[] visited = new boolean[n + 1];
 
         for(int city = 1; city <= n; city++) {
-            if(!visited[city] && hasCycle(city, adj, cities, visited)){
+            if(visited[city]) continue;
+            if(hasCycle(city, -1, adj, new ArrayList<>(), visited)){
                 return;
             }
-            cities.clear();
         }
 
         System.out.println("IMPOSSIBLE");
@@ -176,18 +175,19 @@ public class RoundTrip {
 
 
         List<Integer> res = new ArrayList<>();
+        res.add(city);
+
 
         for(int i = cities.size() - 1; i >= 0; i--) {
-            if(cities.get(i) == city) {
-                break;
-            }
             res.add(cities.get(i));
+            if(cities.get(i) == city) break;
         }
 
-        System.out.println(res);
+        System.out.println(res.size());
+        System.out.println(res.stream().map(Objects::toString).collect(Collectors.joining(" ")));
     }
 
-    private static boolean hasCycle(int source, List<Set<Integer>> adj, List<Integer> cities, boolean[] visited) {
+    private static boolean hasCycle(int source, int prev, List<Set<Integer>> adj, List<Integer> cities, boolean[] visited) {
 
         if(visited[source]) {
             printCycle(cities, source);
@@ -199,8 +199,8 @@ public class RoundTrip {
 
         for(int neighbour : adj.get(source)) {
 
-           if(visited[neighbour]) continue;
-           if(hasCycle(neighbour, adj, cities, visited)) return true;
+            if(neighbour == prev) continue;
+            if(hasCycle(neighbour, source, adj, cities, visited)) return true;
 
         }
 

@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.stream.Collectors;
 
 public class LongestFlightRoute {
@@ -139,56 +141,60 @@ public class LongestFlightRoute {
 
         int n = sc.nextInt(); int m = sc.nextInt();
 
+        int[] inDegree = new int[n + 1];
+
         List<List<Integer>> adj = new ArrayList<>();
 
         for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
 
         for(int i = 0; i < m; i++) {
             int a = sc.nextInt();   int b = sc.nextInt();
+            inDegree[b]++;
             adj.get(a).add(b);
         }
 
-        int[] parentCities = new int[n + 1];
-        Arrays.fill(parentCities, 0);
+        Queue<Integer> Q = new LinkedList<>();
 
-        int[] dp = new int[n + 1];
-        Arrays.fill(dp, - 1);
-        dp[n] = 1;
-        dfs(1, adj, parentCities, dp, new boolean[n + 1]);
-        int longest = dp[1];
-        if (longest == -1) {
+        for(int i = 1; i <= n; i++) {
+            if(inDegree[i] == 0) Q.add(i);
+        }
+
+        int[] prev = new int[n + 1];
+
+        int[] dis = new int[n + 1];
+        Arrays.fill(dis, Integer.MIN_VALUE);
+
+        dis[1] = 0;
+
+        while (!Q.isEmpty()) {
+            int curr = Q.poll();
+            for(int neigh : adj.get(curr)) {
+                if(dis[curr] + 1 > dis[neigh]) {
+                    dis[neigh] = dis[curr] + 1;
+                    prev[neigh] = curr;
+                }
+                inDegree[neigh]--;
+                if(inDegree[neigh] == 0) Q.add(neigh);
+            }
+        }
+
+        if (dis[n] < 0) {
             System.out.println("IMPOSSIBLE");
             return;
         }
 
         List<Integer> path = new ArrayList<>();
         int curr = n;
-        while (curr != 1) {
-            path.add(curr);
-            curr = parentCities[curr];
-        }
         path.add(curr);
+        while (curr != 1) {
+            curr = prev[curr];
+            path.add(curr);
+        }
 
+
+        System.out.println(path.size());
         Collections.reverse(path);
-        String answer = path.stream().map(String::valueOf).collect(Collectors.joining(" "));
-        System.out.println(longest);
-        System.out.println(answer);
-    }
-
-    private static void dfs(int city, List<List<Integer>> adj, int[] parentCities,int[] dp, boolean[] visited) {
-
-       visited[city] = true;
-
-       for(int neigh : adj.get(city)) {
-           if(!visited[neigh]) {
-               dfs(neigh, adj, parentCities, dp, visited);
-           }
-           if(dp[neigh] != -1 && (dp[neigh] + 1) > dp[city]) {
-               dp[city] = dp[neigh] + 1;
-               parentCities[neigh] = city;
-           }
-
-       }
+        System.out.println(path.stream().map(Objects::toString).collect(Collectors.joining(" ")));
 
     }
 }
