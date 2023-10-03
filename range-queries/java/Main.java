@@ -1,78 +1,55 @@
-/* IMPORTANT: Multiple classes and nested static classes are supported */
+import java.util.ArrayList;
+import java.util.List;
 
+class Solution {
 
-
-//imports for BufferedReader
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-
-//import for Scanner and other utility classes
-import java.util.*;
-
-
-// Warning: Printing unwanted or ill-formatted data to output will cause the test cases to fail
-
-class TestClass {
-    public static void main(String args[] ) throws Exception {
-        /* Sample code to perform I/O:
-         * Use either of these methods for input
-
-        //BufferedReader
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        String name = br.readLine();                // Reading input from STDIN
-        System.out.println("Hi, " + name + ".");    // Writing output to STDOUT
-
-            */
-        //Scanner
-        Scanner sc = new Scanner(System.in);
-
-        int t = sc.nextInt();
-        sc.nextLine();
-
-        StringBuilder sb = new StringBuilder();
-
-        while(t --> 0) {
-            int n = sc.nextInt();   int m = sc.nextInt();
-            sc.nextLine();
-            String s1 = sc.nextLine();
-            String s2 = sc.nextLine();
-            sb.append(makeSameAsB(s1, s2)).append("\n");
-        }
-
-        System.out.println(sb);
-
-        // Write your code here
-
+    public static void main(String[] args) {
+        Solution s = new Solution();
+        System.out.println(s.countSmaller(new int[]{26,78,27,100,33,67,90,23,66,5,38,7,35,23,52,22,83,51,98,69,81,32,78,28,94,13,2,97,3,76,99,51,9,21,84,66,65,36,100,41}));
     }
 
+    public List<Integer> countSmaller(int[] nums) {
 
-    private static int makeSameAsB(String A, String B) {
+        int n = nums.length;
+        int[] segTree = new int[(n + 1) * 4];
 
-        int[] mapA = new int[26];
-        int[] mapB = new int[26];
-
-        Set<Character> bC = new HashSet<>();
-
-        for(char c : B.toCharArray()) {
-            bC.add(c);
-            mapB[c - 'a']++;
+        for(int i = 0; i < n; i++) {
+            update(0, segTree, i + 1, nums[i], 1, n);
         }
 
-        int min = Integer.MAX_VALUE;
+        List<Integer> res = new ArrayList<>();
 
-        for(char c : A.toCharArray()) {
-            if(bC.contains(c)) {
-                mapA[c - 'a']++;
-            }
+        for(int i = 1; i <= n; i++) {
+            System.out.println(i);
+            res.add(queryMaxAndLess(0, segTree, i + 1, n, 1, n, nums[i - 1]));
         }
 
+        return res;
+    }
 
-        for(int i : mapA) {
-            if(i == 0) continue;
-            min = Math.min(i, min);
+    private void update(int v, int[] segTree, int pos, int val, int l, int r) {
+        if(l == r) {
+            segTree[v] = val;
+            return;
         }
 
-        return min;
+        int mid = (l + r) / 2;
+
+        if(pos <= mid) update(2 * v + 1, segTree, pos, val, l , mid);
+        else update(2 * v + 2, segTree, pos, val, mid + 1 , r);
+
+        segTree[v] = Math.max(segTree[2 * v + 1], segTree[2 * v + 2]);
+    }
+
+    private int queryMaxAndLess(int v, int[] segTree, int qL, int qR, int l, int r, int val) {
+
+        if(r < qL || l > qR) return 0;
+        if(l >= qL && r <= qR && segTree[v] < val) return r - l + 1;
+        if(l == r && segTree[v] >= val) return 0;
+
+        int mid = (l + r) / 2;
+
+        return queryMaxAndLess(2 * v + 1, segTree, qL, qR, l, mid, val) + queryMaxAndLess(2 * v + 2, segTree, qL, qR, mid + 1, r, val);
 
     }
 }

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class TreeDiameter {
+public class SubTreeQueries {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -130,47 +130,87 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
 
-        int n = sc.nextInt();
+        int n = sc.nextInt();   int q = sc.nextInt();
+
+        long[] values = new long[n + 1];
+        int[] subTreeSizes = new int[n + 1];
 
         List<List<Integer>> adj = new ArrayList<>();
 
-
         for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
+        long[] BIT = new long[n + 1];
+
+        for(int i = 1; i <= n; i++) {
+            values[i] = sc.nextInt();
+        }
 
         for(int i = 0; i < n - 1; i++) {
             int a = sc.nextInt();   int b = sc.nextInt();
             adj.get(a).add(b);  adj.get(b).add(a);
         }
 
-        dfs(1, 0, adj);
+        int[] lookup = new int[n + 1];
+        int[] reverseLookUp = new int[n + 1];
 
-        System.out.println(maxDiameter);
-    }
+        dfsForSubTree(1, -1, adj, subTreeSizes, lookup, reverseLookUp);
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
+        for(int i = 1; i <= n; i++) update(BIT, i, n, values[lookup[i]]);
 
-        int h1 = 0; int h2 = 0;
+        StringBuilder sb = new StringBuilder();
 
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
-                }
+        for(int i = 0; i < q; i++) {
+            int type = sc.nextInt();
+            if(type == 1) {
+                int s = sc.nextInt();   int x = sc.nextInt();
+                update(BIT, reverseLookUp[s], n, x - values[s]);
+                values[s] = x;
+            } else {
+                int s = sc.nextInt();
+                int subTreeSize = subTreeSizes[s];
+                sb.append(sum(BIT, reverseLookUp[s] + subTreeSize) - sum(BIT, reverseLookUp[s] - 1)).append("\n");
             }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
         }
 
-        return h1;
+        System.out.println(sb);
+
+
     }
+
+    private static long sum(long[] BIT, int k) {
+        long sum = 0;
+        while (k >= 1) {
+            sum += BIT[k];
+            k -= k & -k;
+        }
+        return sum;
+    }
+
+    private static void update(long[] BIT, int k, int n, long v) {
+        while (k <= n) {
+            BIT[k] += v;
+            k += k & -k;
+        }
+    }
+
+    private static int id = 0;
+
+    private static void dfsForSubTree(int x, int parent, List<List<Integer>> adj, int[] subTreeSizes, int[] lookup, int[] reverseLookUp) {
+
+        id++;
+        int size = 0;
+        lookup[id] = x;
+        reverseLookUp[x] = id;
+        for(int neigh : adj.get(x)) {
+            if(neigh == parent) continue;
+            dfsForSubTree(neigh, x, adj, subTreeSizes, lookup, reverseLookUp);
+            size += 1 + subTreeSizes[neigh];
+        }
+        subTreeSizes[x] = size;
+
+    }
+
 }

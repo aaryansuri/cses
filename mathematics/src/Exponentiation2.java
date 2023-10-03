@@ -1,11 +1,9 @@
+
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-public class TreeDiameter {
+public class    Exponentiation2 {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -23,7 +21,7 @@ public class TreeDiameter {
         public Reader(String file_name) throws IOException
         {
             din = new DataInputStream(
-                    new FileInputStream(file_name));
+                new FileInputStream(file_name));
             buffer = new byte[BUFFER_SIZE];
             bufferPointer = bytesRead = 0;
         }
@@ -110,7 +108,7 @@ public class TreeDiameter {
         private void fillBuffer() throws IOException
         {
             bytesRead = din.read(buffer, bufferPointer = 0,
-                    BUFFER_SIZE);
+                BUFFER_SIZE);
             if (bytesRead == -1)
                 buffer[0] = -1;
         }
@@ -130,47 +128,30 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
+    private static long expo(int a, int b, int mod) {
+        if(b == 0) return 1;
+        long sq = expo(a, b / 2, mod) ;
+        if((b & 1) == 0) {
+            return (sq * sq) % mod;
+        }
+        return (a * ((sq * sq) % mod)) % mod;
+    }
 
     public static void main(String[] args) throws IOException {
-
         Reader sc = new Reader();
 
         int n = sc.nextInt();
+        StringBuilder sb = new StringBuilder();
 
-        List<List<Integer>> adj = new ArrayList<>();
+        while (n --> 0) {
 
-
-        for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
-
-        for(int i = 0; i < n - 1; i++) {
-            int a = sc.nextInt();   int b = sc.nextInt();
-            adj.get(a).add(b);  adj.get(b).add(a);
+            int a = sc.nextInt();   int b = sc.nextInt();   int c = sc.nextInt();
+            long expo1 = expo(b, c , 1000000007 - 1);
+            long ans = expo(a,(int) expo1, 1000000007);
+            sb.append(ans).append("\n");
         }
 
-        dfs(1, 0, adj);
-
-        System.out.println(maxDiameter);
+        System.out.println(sb);
     }
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
-
-        int h1 = 0; int h2 = 0;
-
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
-                }
-            }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
-        }
-
-        return h1;
-    }
 }

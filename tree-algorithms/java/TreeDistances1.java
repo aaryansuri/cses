@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-public class TreeDiameter {
+public class TreeDistances1 {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -130,8 +133,6 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
@@ -140,7 +141,6 @@ public class TreeDiameter {
 
         List<List<Integer>> adj = new ArrayList<>();
 
-
         for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
 
         for(int i = 0; i < n - 1; i++) {
@@ -148,29 +148,56 @@ public class TreeDiameter {
             adj.get(a).add(b);  adj.get(b).add(a);
         }
 
-        dfs(1, 0, adj);
+        dfs(1, 0, adj, 0);
+        int oneEnd = nodeEnd;
+        maxD = 0;
+        dfs(oneEnd, 0, adj, 0);
+        int anotherEnd = nodeEnd;
 
-        System.out.println(maxDiameter);
+        int[] oneEndDistance = new int[n + 1];
+        dfs(oneEnd, 0, adj, 0, oneEndDistance);
+
+        int[] anotherEndDistance = new int[n + 1];
+        dfs(anotherEnd, 0, adj, 0, anotherEndDistance);
+
+        StringBuilder sb = new StringBuilder();
+
+        for(int i = 1; i <= n; i++) {
+            sb.append(Math.max(oneEndDistance[i], anotherEndDistance[i])).append(" ");
+        }
+
+
+        System.out.println(sb);
+
     }
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
+    private static int maxD = 0;
+    private static int nodeEnd = 0;
 
-        int h1 = 0; int h2 = 0;
+    private static void dfs(int x, int parent, List<List<Integer>> adj, int distance) {
+
+        if(distance > maxD) {
+            nodeEnd = x;
+            maxD = distance;
+        }
 
         for(int neigh : adj.get(x)) {
             if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
-                }
-            }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
+            dfs(neigh, x, adj, distance + 1);
+        }
+    }
+
+    private static void dfs(int x, int parent, List<List<Integer>> adj, int distance,  int[] distances) {
+
+        distance++;
+
+        for(int neigh : adj.get(x)) {
+            if(neigh == parent) continue;
+            dfs(neigh, x, adj, distance, distances);
+            distances[neigh] = distance;
         }
 
-        return h1;
     }
+
+
 }

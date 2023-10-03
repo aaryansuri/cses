@@ -145,23 +145,48 @@ public class TreeMatching {
 
         int[][] dp = new int[n + 1][2];
 
-        System.out.println(Math.max(dfs(1, 0, false, adj, dp), 1 + dfs(1, 0, true, adj, dp)));
+        Arrays.stream(dp).forEach(r -> Arrays.fill(r, -1));
+
+        System.out.println(Math.max(dfs(1, 0, false, adj, dp), dfs(1, 0, true, adj, dp)));
 
     }
 
-    private static int dfs(int x, int parent, boolean parentPickedUp, List<Set<Integer>> adj, int[][] dp) {
+    private static int dfs(int x, int parent, boolean nextPickup, List<Set<Integer>> adj, int[][] dp) {
 
-        int pickD = 0; int notPickD = 0;
+        if(dp[x][nextPickup? 1 : 0] != - 1) return dp[x][nextPickup? 1 : 0];
 
-        boolean atTheEnd = true;
+        if(nextPickup) {
 
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
+            int max = 0;
+            int pickUpAll = 0;
 
+            for(int neigh : adj.get(x)) {
+                if(neigh == parent) continue;
+                pickUpAll += dfs(neigh, x, true, adj, dp);
+            }
+
+            for(int neigh : adj.get(x)) {
+                if(neigh == parent) continue;
+                int pickup = 1 + dfs(neigh, x, false, adj, dp);
+                max = Math.max(max, pickUpAll - dp[neigh][1] + pickup);
+            }
+
+            dp[x][1] = max;
+
+            return max;
+        } else {
+            int ans = 0;
+
+            for(int neigh : adj.get(x)) {
+                if(neigh == parent) continue;
+                ans += Math.max(dfs(neigh, x, true, adj, dp), dfs(neigh, x, false, adj, dp));
+            }
+
+            dp[x][0] = ans;
+
+            return ans;
         }
 
-
-        return Math.max(pickD, notPickD);
 
     }
 

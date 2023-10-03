@@ -2,10 +2,11 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
-public class TreeDiameter {
+public class SumOfDivisors {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -23,7 +24,7 @@ public class TreeDiameter {
         public Reader(String file_name) throws IOException
         {
             din = new DataInputStream(
-                    new FileInputStream(file_name));
+                new FileInputStream(file_name));
             buffer = new byte[BUFFER_SIZE];
             bufferPointer = bytesRead = 0;
         }
@@ -110,7 +111,7 @@ public class TreeDiameter {
         private void fillBuffer() throws IOException
         {
             bytesRead = din.read(buffer, bufferPointer = 0,
-                    BUFFER_SIZE);
+                BUFFER_SIZE);
             if (bytesRead == -1)
                 buffer[0] = -1;
         }
@@ -130,47 +131,36 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
 
-        int n = sc.nextInt();
 
-        List<List<Integer>> adj = new ArrayList<>();
+        long a = (long) Math.pow(2, 30) - 1;
+        System.out.println(Long.toBinaryString(a));
 
 
-        for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
-
-        for(int i = 0; i < n - 1; i++) {
-            int a = sc.nextInt();   int b = sc.nextInt();
-            adj.get(a).add(b);  adj.get(b).add(a);
-        }
-
-        dfs(1, 0, adj);
-
-        System.out.println(maxDiameter);
     }
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
+    private static long sumOfDivisors(long x) {
 
-        int h1 = 0; int h2 = 0;
+        int i = 1;
+        long div = 0;
 
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
+        while (i * i <= x) {
+            if(x % i == 0) {
+                if(x / i == i) {
+                    div+= i;
                 } else {
-                    h2 = neighHeight;
+                    div += (i + x / i);
                 }
+                div %= 1000000007;
             }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
+            i++;
         }
 
-        return h1;
+        return div % 1000000007;
+
     }
+
 }

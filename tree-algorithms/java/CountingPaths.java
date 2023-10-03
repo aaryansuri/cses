@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-public class TreeDiameter {
+public class CountingPaths {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -130,47 +132,108 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
 
-        int n = sc.nextInt();
+        int n = sc.nextInt();   int q = sc.nextInt();
 
         List<List<Integer>> adj = new ArrayList<>();
 
-
         for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
+
+
 
         for(int i = 0; i < n - 1; i++) {
             int a = sc.nextInt();   int b = sc.nextInt();
             adj.get(a).add(b);  adj.get(b).add(a);
         }
 
-        dfs(1, 0, adj);
+        int m = (int) (Math.log(n) / Math.log(2));
 
-        System.out.println(maxDiameter);
+        int[][] ancestors = new int[n + 1][m + 1];
+        int[] paths = new int[n + 1];
+        int[] distance = new int[n + 1];
+
+        dfs(1, -1, adj, ancestors, m, 0, distance);
+
+        for(int i = 0; i < q; i++) {
+            int a = sc.nextInt();   int b = sc.nextInt();
+            pathSaveLCA(a, b, ancestors, distance, m, paths);
+        }
+
+
+        dfsSum(1, -1, adj, paths);
+
+        String res = Arrays.stream(paths, 1, n + 1).mapToObj(Objects::toString).collect(Collectors.joining(" "));
+        System.out.println(res);
     }
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
+    private static void dfsSum(int x, int parent, List<List<Integer>> adj, int[] paths) {
+        int sum = 0;
+        for(int neigh : adj.get(x)) {
+            if(neigh == parent) continue;
+            dfsSum(neigh, x, adj, paths);
+            sum += paths[neigh];
+        }
+        paths[x] += sum;
+    }
 
-        int h1 = 0; int h2 = 0;
+    private static void dfs(int x, int parent, List<List<Integer>> adj, int[][] ancestors, int m, int d, int[] distance){
+
+        distance[x] = d;
 
         for(int neigh : adj.get(x)) {
             if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
-                }
+
+            ancestors[neigh][0] = x;
+            for(int j = 1; j <= m; j++) {
+                ancestors[neigh][j] = ancestors[neigh][j - 1] == 0 ? 0 : ancestors[ancestors[neigh][j - 1]][j - 1];
             }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
+            dfs(neigh, x, adj, ancestors, m, d + 1, distance);
         }
 
-        return h1;
     }
+
+    private static int LCA(int a, int b, int[] distance, int[][] ancestors, int m) {
+
+        int u = a;  int v = b;
+
+        if(distance[u] > distance[v]) {
+            int temp = u;
+            u = v;
+            v = temp;
+        }
+
+        int k = distance[v] - distance[u];
+        int col = 0;
+
+        while(k != 0) {
+            if((k & 1) == 1) {
+                v = ancestors[v][col];
+            }
+            col = col + 1;
+            k = k >> 1;
+        }
+
+        if(v == u) return u;
+
+        for(int j = m; j >= 0; j--) {
+            if(ancestors[u][j] != ancestors[v][j]) {
+                u = ancestors[u][j];
+                v = ancestors[v][j];
+            }
+        }
+
+        return ancestors[u][0];
+    }
+
+    private static void pathSaveLCA(int a, int b, int[][] ancestors, int[] distance, int m, int[] paths) {
+        int lca = LCA(a, b, distance,ancestors, m);
+        paths[a] += 1;
+        paths[b] += 1;
+        paths[lca] -=1;
+        paths[ancestors[lca][0]] -= 1;
+    }
+
 }

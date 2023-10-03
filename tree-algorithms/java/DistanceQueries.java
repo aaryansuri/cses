@@ -2,10 +2,9 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class TreeDiameter {
+public class DistanceQueries {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -130,47 +129,88 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
 
-        int n = sc.nextInt();
+        int n = sc.nextInt();   int q = sc.nextInt();
+
+        int m = (int) (Math.log(200000) / Math.log(2));
+
+        int[][] ancestors = new int[n + 1][m + 1];
 
         List<List<Integer>> adj = new ArrayList<>();
 
-
         for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
 
-        for(int i = 0; i < n - 1; i++) {
-            int a = sc.nextInt();   int b = sc.nextInt();
-            adj.get(a).add(b);  adj.get(b).add(a);
+        for(int i = 1; i < n; i++) {
+            int u = sc.nextInt();   int v = sc.nextInt();
+            adj.get(u).add(v);
+            adj.get(v).add(u);
         }
 
-        dfs(1, 0, adj);
+        int[] distance = new int[n + 1];
+        dfsForHeight(1, distance, 0, adj, 0, ancestors);
+        build(ancestors, m, n);
 
-        System.out.println(maxDiameter);
+
+        StringBuilder sb = new StringBuilder();
+
+        for(int i = 0; i < q; i++) {
+            int u = sc.nextInt();   int v = sc.nextInt();
+            sb.append(distance[u] + distance[v] - 2 * distance[LCA(u, v , distance, ancestors, m)]).append("\n");
+        }
+
+        System.out.println(sb);
+
     }
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
+    private static int LCA(int u, int v, int[] distance, int[][] ancestors, int m) {
 
-        int h1 = 0; int h2 = 0;
+        if(distance[u] > distance[v]) {
+            int temp = u;
+            u = v;
+            v = temp;
+        }
 
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
-                }
+        int k = distance[v] - distance[u];
+
+        for(int j = m; j >= 0; j--) {
+            if((k & (1 << j)) != 0) {
+                v = ancestors[v][j];
             }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
         }
 
-        return h1;
+        if(u == v) return u;
+
+        for(int j = m; j >= 0; j--) {
+            if(ancestors[u][j] != ancestors[v][j]) {
+                u = ancestors[u][j];
+                v = ancestors[v][j];
+            }
+        }
+
+        return ancestors[u][0];
     }
+
+    private static void dfsForHeight(int x, int[] distance, int d, List<List<Integer>> adj, int parent, int[][] ancestors) {
+
+        distance[x] = d;
+        ancestors[x][0] = parent;
+        for(int child : adj.get(x)) {
+            if(child == parent) continue;
+            dfsForHeight(child, distance, d + 1, adj, x, ancestors);
+        }
+    }
+
+
+    private static void build(int[][] ancestors, int m, int n) {
+        for(int j = 1; j <= m; j++) {
+            for(int i = 1; i <= n; i++) {
+                ancestors[i][j] = ancestors[i][j - 1] == -1 ? -1 : ancestors[ancestors[i][j - 1]][j - 1];
+            }
+        }
+    }
+
+
 }

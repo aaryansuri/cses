@@ -1,53 +1,47 @@
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-public class TreeDiameter {
+public class GraphPaths1 {
 
     static class Reader {
+
         final private int BUFFER_SIZE = 1 << 16;
         private DataInputStream din;
         private byte[] buffer;
         private int bufferPointer, bytesRead;
 
-        public Reader()
-        {
+        public Reader() {
             din = new DataInputStream(System.in);
             buffer = new byte[BUFFER_SIZE];
             bufferPointer = bytesRead = 0;
         }
 
-        public Reader(String file_name) throws IOException
-        {
+        public Reader(String file_name) throws IOException {
             din = new DataInputStream(
-                    new FileInputStream(file_name));
+                new FileInputStream(file_name));
             buffer = new byte[BUFFER_SIZE];
             bufferPointer = bytesRead = 0;
         }
 
-        public String readLine() throws IOException
-        {
+        public String readLine() throws IOException {
             byte[] buf = new byte[64]; // line length
             int cnt = 0, c;
             while ((c = read()) != -1) {
                 if (c == '\n') {
                     if (cnt != 0) {
                         break;
-                    }
-                    else {
+                    } else {
                         continue;
                     }
                 }
-                buf[cnt++] = (byte)c;
+                buf[cnt++] = (byte) c;
             }
             return new String(buf, 0, cnt);
         }
 
-        public int nextInt() throws IOException
-        {
+        public int nextInt() throws IOException {
             int ret = 0;
             byte c = read();
             while (c <= ' ') {
@@ -65,8 +59,7 @@ public class TreeDiameter {
             return ret;
         }
 
-        public long nextLong() throws IOException
-        {
+        public long nextLong() throws IOException {
             long ret = 0;
             byte c = read();
             while (c <= ' ')
@@ -82,8 +75,7 @@ public class TreeDiameter {
             return ret;
         }
 
-        public double nextDouble() throws IOException
-        {
+        public double nextDouble() throws IOException {
             double ret = 0, div = 1;
             byte c = read();
             while (c <= ' ')
@@ -107,70 +99,78 @@ public class TreeDiameter {
             return ret;
         }
 
-        private void fillBuffer() throws IOException
-        {
+        private void fillBuffer() throws IOException {
             bytesRead = din.read(buffer, bufferPointer = 0,
-                    BUFFER_SIZE);
+                BUFFER_SIZE);
             if (bytesRead == -1)
                 buffer[0] = -1;
         }
 
-        private byte read() throws IOException
-        {
+        private byte read() throws IOException {
             if (bufferPointer == bytesRead)
                 fillBuffer();
             return buffer[bufferPointer++];
         }
 
-        public void close() throws IOException
-        {
+        public void close() throws IOException {
             if (din == null)
                 return;
             din.close();
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
 
-        int n = sc.nextInt();
+        int n = sc.nextInt();   int m = sc.nextInt();   int k = sc.nextInt();
 
-        List<List<Integer>> adj = new ArrayList<>();
+        long[][] adj = new long[n][n];
 
-
-        for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
-
-        for(int i = 0; i < n - 1; i++) {
+        while (m --> 0) {
             int a = sc.nextInt();   int b = sc.nextInt();
-            adj.get(a).add(b);  adj.get(b).add(a);
+            adj[a - 1][b - 1]++;
         }
 
-        dfs(1, 0, adj);
+        identity = new long[n][n];
 
-        System.out.println(maxDiameter);
+        for(int i = 0; i < n; i++) {
+            identity[i][i] = 1;
+        }
+
+        long[][] res = matrixPower(adj, k);
+
+        System.out.println(res[0][n - 1]);
+
+
     }
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
+    private static long[][] identity;
 
-        int h1 = 0; int h2 = 0;
+    private static long[][] matrixPower(long[][] coeff, long n) {
+        if(n == 0) {
+            return identity;
+        }
+        long[][] res = matrixPower(coeff, n / 2);
+        res = multiply(res, res);
 
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
+        return n % 2 == 1 ? multiply(res, coeff) : res;
+    }
+
+
+    private static final int mod = 1000000007;
+
+    private static long[][] multiply(long[][] matrix1, long[][] matrix2) {
+
+        long[][] res = new long[matrix1.length][matrix1.length];
+
+        for(int i = 0; i < matrix1.length; i++) {
+            for(int j = 0; j < matrix1.length; j++) {
+                for(int k = 0; k < matrix1.length; k++) {
+                    res[i][j] = (res[i][j] +  matrix1[i][k] * matrix2[k][j]) % mod;
                 }
             }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
         }
-
-        return h1;
+        return res;
     }
 }

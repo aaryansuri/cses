@@ -2,10 +2,10 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class TreeDiameter {
+public class FindingCentroid {
+
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -130,8 +130,6 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
@@ -140,7 +138,6 @@ public class TreeDiameter {
 
         List<List<Integer>> adj = new ArrayList<>();
 
-
         for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
 
         for(int i = 0; i < n - 1; i++) {
@@ -148,29 +145,27 @@ public class TreeDiameter {
             adj.get(a).add(b);  adj.get(b).add(a);
         }
 
-        dfs(1, 0, adj);
+        int[] subTreeSize = new int[n + 1];
 
-        System.out.println(maxDiameter);
+        dfs1(1, 0, adj, subTreeSize);
+        System.out.println(dfsFindCentroid(1, 0, adj, subTreeSize, n));
     }
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
+    private static int dfsFindCentroid(int x, int parent, List<List<Integer>> adj, int[] subTreeSize, int n) {
+        for(int neigh : adj.get(x)) {
+            if(neigh == parent) continue;
+            if(subTreeSize[neigh] >= n / 2) return dfsFindCentroid(neigh, x, adj, subTreeSize, n);
+        }
+        return x;
+    }
 
-        int h1 = 0; int h2 = 0;
+    private static void dfs1(int x, int parent, List<List<Integer>> adj, int[] subTreeSize) {
 
         for(int neigh : adj.get(x)) {
             if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
-                }
-            }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
+            dfs1(neigh, x, adj, subTreeSize);
+            subTreeSize[x] += 1 + subTreeSize[neigh];
         }
 
-        return h1;
     }
 }

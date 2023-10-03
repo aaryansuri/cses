@@ -1,11 +1,10 @@
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Scanner;
 
-public class TreeDiameter {
+public class DivisorAnalysis {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -23,7 +22,7 @@ public class TreeDiameter {
         public Reader(String file_name) throws IOException
         {
             din = new DataInputStream(
-                    new FileInputStream(file_name));
+                new FileInputStream(file_name));
             buffer = new byte[BUFFER_SIZE];
             bufferPointer = bytesRead = 0;
         }
@@ -110,7 +109,7 @@ public class TreeDiameter {
         private void fillBuffer() throws IOException
         {
             bytesRead = din.read(buffer, bufferPointer = 0,
-                    BUFFER_SIZE);
+                BUFFER_SIZE);
             if (bytesRead == -1)
                 buffer[0] = -1;
         }
@@ -130,47 +129,90 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
 
+        int mod = 1000000007;
+
         int n = sc.nextInt();
 
-        List<List<Integer>> adj = new ArrayList<>();
 
+        int[] prime = new int[n];
+        int[] expo = new int[n];
 
-        for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
+        for(int i = 0; i < n; i++) {
+            prime[i] = sc.nextInt();
+            expo[i] = sc.nextInt();
 
-        for(int i = 0; i < n - 1; i++) {
-            int a = sc.nextInt();   int b = sc.nextInt();
-            adj.get(a).add(b);  adj.get(b).add(a);
         }
 
-        dfs(1, 0, adj);
+        long numberOfDivisors = 1;
+        for(int i = 0; i < n; i++) {
+            numberOfDivisors = (numberOfDivisors * (expo[i] + 1)) % mod;
+        }
 
-        System.out.println(maxDiameter);
-    }
+        long sumOfFactors = 1;
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
+        for(int i = 0; i < n; i++) {
+            sumOfFactors = (sumOfFactors * geometricSum(prime[i], expo[i], mod))  % mod;
+        }
 
-        int h1 = 0; int h2 = 0;
+        long productOfDivisors = 1;
+        boolean oddExponent = false;
+        int posOddEle = -1;
 
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
+        for(int i = 0; i < n; i++) {
+            if(expo[i] % 2 == 1) {
+                oddExponent = true;
+                posOddEle = i;
+            }
+        }
+
+        // a ^ b ^ c
+        // use mod - 1 b ^ c
+
+        if(oddExponent) {
+            long outerExpo = 1;
+            for(int i = 0; i < n; i++) {
+                if(i == posOddEle) {
+                    outerExpo = (outerExpo * (expo[i] + 1)/2) % (mod - 1);
                 } else {
-                    h2 = neighHeight;
+                    outerExpo = (outerExpo * (expo[i] + 1)) % (mod - 1);
                 }
             }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
+            for(int i = 0; i < n; i++) {
+                productOfDivisors = (productOfDivisors * exponentiation(prime[i], (expo[i] * outerExpo) % (mod - 1), mod)) % mod;
+            }
+        } else {
+            long outerExpo = 1;
+            for(int i = 0; i < n; i++) {
+                outerExpo = (outerExpo * (expo[i] + 1)) % (mod - 1);
+            }
+            for(int i = 0; i < n; i++) {
+                productOfDivisors = (productOfDivisors * exponentiation(prime[i], ((expo[i]/2) * outerExpo) % (mod - 1), mod)) % mod;
+            }
         }
 
-        return h1;
+        System.out.println(numberOfDivisors + " " + sumOfFactors + " " + productOfDivisors);
+        int[][] dp = new int[301][6];
+        Arrays.stream(dp).forEach(row -> Arrays.fill(row, -1));
+
     }
+
+    private static long geometricSum(int base, int power, int mod) {
+        long numerator = (exponentiation(base, power + 1, mod) - 1 + mod) % mod;
+        long denominator = exponentiation(base - 1, mod - 2, mod);
+        return (numerator * denominator) % mod;
+    }
+
+    private static long exponentiation(long a, long b, int mod) {
+        if(b == 0) return 1;
+        long sq = exponentiation(a, b / 2, mod) ;
+        if((b & 1) == 0) {
+            return (sq * sq) % mod;
+        }
+        return (a * ((sq * sq) % mod)) % mod;
+    }
+
 }

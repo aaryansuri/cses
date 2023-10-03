@@ -2,10 +2,10 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class TreeDiameter {
+public class PathQueries {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -130,47 +130,94 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
 
-        int n = sc.nextInt();
+        int n = sc.nextInt();   int q = sc.nextInt();
 
-        List<List<Integer>> adj = new ArrayList<>();
+        int[] values = new int[n + 1];
+        int[] subTreeSize = new int[n + 1];
+        long[] pathSum = new long[n + 1];
+        int[] lookUp = new int[n + 1];
+        long[] BIT = new long[n + 1];
 
+        for(int i = 1; i <= n; i++) values[i] = sc.nextInt();
 
-        for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
+        List<Integer>[] adj = new List[n +1];
+
+        for(int i = 0; i <= n; i++) adj[i] = new ArrayList<>();
 
         for(int i = 0; i < n - 1; i++) {
             int a = sc.nextInt();   int b = sc.nextInt();
-            adj.get(a).add(b);  adj.get(b).add(a);
+            adj[a].add(b);  adj[b].add(a);
         }
 
-        dfs(1, 0, adj);
+        dfs(1, 0, adj, subTreeSize, lookUp, values, pathSum, n);
 
-        System.out.println(maxDiameter);
-    }
+        StringBuilder sb = new StringBuilder();
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
-
-        int h1 = 0; int h2 = 0;
-
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
-                }
+        for(int i = 0; i < q; i++) {
+            int type = sc.nextInt();
+            if(type == 1) {
+                int s = sc.nextInt();   int x = sc.nextInt();
+                update(BIT, lookUp[s], n, x - values[s]);
+                update(BIT, lookUp[s] + subTreeSize[s] + 1, n,  - (x - values[s]));
+                values[s] = x;
+            } else {
+                int s = sc.nextInt();
+                sb.append(sum(BIT, lookUp[s]) + pathSum[lookUp[s]]).append("\n");
             }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
         }
 
-        return h1;
+        System.out.println(sb);
     }
+
+    /**
+     * 5 3
+     * 4 2 5 2 1
+     * 1 2
+     * 1 3
+     * 3 4
+     * 3 5
+     * 2 4
+     * 1 3 2
+     * 2 4
+     * change the value of node s
+     *  to x
+     *
+     * calculate the sum of values on the path from the root to node s
+     */
+
+    private static int id = 0;
+
+    private static void dfs(int x, int parent, List<Integer>[] adj, int[] subTreeSizes, int[] lookup, int[] values, long[] pathSum, int n) {
+        id++;
+        int size = 0;
+        lookup[x] = id;
+        pathSum[id] = values[x] + pathSum[lookup[parent]];
+        for(int neigh : adj[x]) {
+            if(neigh == parent) continue;
+            dfs(neigh, x, adj, subTreeSizes, lookup, values, pathSum, n);
+            size += 1 + subTreeSizes[neigh];
+        }
+        subTreeSizes[x] = size;
+    }
+
+    private static long sum(long[] BIT, int k) {
+        long sum = 0;
+        while (k >= 1) {
+            sum += BIT[k];
+            k -= k & -k;
+        }
+        return sum;
+    }
+
+    private static void update(long[] BIT, int k, int n, long v) {
+        while (k <= n) {
+            BIT[k] += v;
+            k += k & -k;
+        }
+    }
+
 }

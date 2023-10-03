@@ -1,11 +1,9 @@
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.BitSet;
 
-public class TreeDiameter {
+public class CommonDivisors {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -23,7 +21,7 @@ public class TreeDiameter {
         public Reader(String file_name) throws IOException
         {
             din = new DataInputStream(
-                    new FileInputStream(file_name));
+                new FileInputStream(file_name));
             buffer = new byte[BUFFER_SIZE];
             bufferPointer = bytesRead = 0;
         }
@@ -110,7 +108,7 @@ public class TreeDiameter {
         private void fillBuffer() throws IOException
         {
             bytesRead = din.read(buffer, bufferPointer = 0,
-                    BUFFER_SIZE);
+                BUFFER_SIZE);
             if (bytesRead == -1)
                 buffer[0] = -1;
         }
@@ -130,47 +128,37 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
 
         int n = sc.nextInt();
 
-        List<List<Integer>> adj = new ArrayList<>();
 
+        int[] isPresent = new int[1000000 + 1];
 
-        for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
+        int max = 0;
 
-        for(int i = 0; i < n - 1; i++) {
-            int a = sc.nextInt();   int b = sc.nextInt();
-            adj.get(a).add(b);  adj.get(b).add(a);
+        while (n --> 0) {
+            int num = sc.nextInt();
+            max = Math.max(max, num);
+            isPresent[num]++;
         }
 
-        dfs(1, 0, adj);
-
-        System.out.println(maxDiameter);
-    }
-
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
-
-        int h1 = 0; int h2 = 0;
-
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
+        for(int gcd = max; gcd >= 1; gcd--) {
+            int cnt = 0;
+            for(int multiples = gcd; multiples <= max; multiples += gcd) {
+                cnt += isPresent[multiples];
+                if(cnt > 1) {
+                    System.out.println(gcd);
+                    return;
                 }
             }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
         }
 
-        return h1;
+        System.out.println(1);
+
+
     }
+
 }

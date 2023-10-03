@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-public class TreeDiameter {
+public class FixedLengthPath1 {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -23,7 +25,7 @@ public class TreeDiameter {
         public Reader(String file_name) throws IOException
         {
             din = new DataInputStream(
-                    new FileInputStream(file_name));
+                new FileInputStream(file_name));
             buffer = new byte[BUFFER_SIZE];
             bufferPointer = bytesRead = 0;
         }
@@ -110,7 +112,7 @@ public class TreeDiameter {
         private void fillBuffer() throws IOException
         {
             bytesRead = din.read(buffer, bufferPointer = 0,
-                    BUFFER_SIZE);
+                BUFFER_SIZE);
             if (bytesRead == -1)
                 buffer[0] = -1;
         }
@@ -130,16 +132,26 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
+    private static int[] cnt;
+    private static int maxDepth;
+    private static boolean[] processed;
+    private static int[] subTreeSize;
+    private static long ans;
+    private static int k;
+
+    private static List<List<Integer>> adj;
 
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
 
-        int n = sc.nextInt();
+        int n = sc.nextInt();   k = sc.nextInt();
 
-        List<List<Integer>> adj = new ArrayList<>();
+        cnt = new int[n + 1];
+        processed = new boolean[n + 1];
+        subTreeSize = new int[n + 1];
 
+        adj = new ArrayList<>();
 
         for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
 
@@ -148,29 +160,80 @@ public class TreeDiameter {
             adj.get(a).add(b);  adj.get(b).add(a);
         }
 
-        dfs(1, 0, adj);
+        cnt[0] = 1;
 
-        System.out.println(maxDiameter);
+        centroidDecompose(1);
+
+        System.out.println(ans);
+        System.out.println(time);
+
     }
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
+    private static void centroidDecompose(int node) {
 
-        int h1 = 0; int h2 = 0;
 
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
-                }
+        int subTreeSize = getSubTreeSize(node, 0);
+        int centroid = getCentroid(node, subTreeSize / 2, 0);
+
+        processed[centroid] = true;
+        maxDepth = 0;
+
+
+
+        System.out.println("centroid is " + centroid);
+        for(int child : adj.get(centroid)) {
+            if(!processed[child]) {
+                long temp = ans;
+                getCount(child, centroid, false, 1);
+                getCount(child, centroid, true, 1);
+                System.out.println("answer -> " + child + ", " + (ans - temp));
             }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
         }
+        System.out.println();
 
-        return h1;
+
+        Arrays.fill(cnt, 1, maxDepth + 1, 0);
+        for(int neigh : adj.get(centroid)) {
+            if(!processed[neigh]) centroidDecompose(neigh);
+        }
     }
+
+    private static long time = 0;
+
+    private static void getCount(int node, int parent, boolean filling, int depth) {
+        if(depth > k) return;
+        maxDepth = Math.max(depth, maxDepth);
+        if(filling) cnt[depth]++;
+        else {
+            ans += cnt[k - depth];
+            time++;
+        }
+        for(int neigh : adj.get(node)) {
+            if(!processed[neigh] && neigh != parent) {
+                getCount(neigh, node, filling, depth + 1);
+            }
+        }
+    }
+
+    private static int getCentroid(int node, int size, int parent) {
+        for(int child : adj.get(node)) {
+            if(!processed[child] && child != parent && subTreeSize[child] >= size) {
+                return getCentroid(child, size, node);
+            }
+        }
+        return node;
+    }
+
+    private static int getSubTreeSize(int node, int parent) {
+        subTreeSize[node] = 1;
+        for(int neigh : adj.get(node)) {
+            if(!processed[neigh] && neigh != parent) {
+                subTreeSize[node] += getSubTreeSize(neigh, node);
+            }
+        }
+        return subTreeSize[node];
+    }
+
+
+
 }

@@ -1,11 +1,9 @@
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
-public class TreeDiameter {
+public class CompanyQueries1 {
 
     static class Reader {
         final private int BUFFER_SIZE = 1 << 16;
@@ -130,47 +128,58 @@ public class TreeDiameter {
         }
     }
 
-    private static int maxDiameter = 0;
-
     public static void main(String[] args) throws IOException {
 
         Reader sc = new Reader();
 
-        int n = sc.nextInt();
+        int n = sc.nextInt();   int q = sc.nextInt();
 
-        List<List<Integer>> adj = new ArrayList<>();
+        int m = (int) (Math.log(200000) / Math.log(2));
 
-
-        for(int i = 0; i <= n; i++) adj.add(new ArrayList<>());
+        int[][] ancestors = new int[n][m + 1];
+        ancestors[0][0] = -1;
 
         for(int i = 0; i < n - 1; i++) {
-            int a = sc.nextInt();   int b = sc.nextInt();
-            adj.get(a).add(b);  adj.get(b).add(a);
+            ancestors[i + 1][0] = sc.nextInt() - 1;
         }
 
-        dfs(1, 0, adj);
+        build(ancestors, m, n);
 
-        System.out.println(maxDiameter);
+
+
+        StringBuilder sb = new StringBuilder();
+
+        for(int i = 0; i < q; i++) {
+            int x = sc.nextInt();   int k = sc.nextInt();
+            sb.append(kthAncestor(ancestors, x - 1, k)).append("\n");
+        }
+
+        System.out.println(sb);
+
     }
 
-    private static int dfs(int x, int parent, List<List<Integer>> adj) {
-
-        int h1 = 0; int h2 = 0;
-
-        for(int neigh : adj.get(x)) {
-            if(neigh == parent) continue;
-            int neighHeight  = 1 + dfs(neigh, x, adj);
-            if(neighHeight > h2) {
-                if(neighHeight > h1) {
-                    h2 = h1;
-                    h1 = neighHeight;
-                } else {
-                    h2 = neighHeight;
-                }
+    private static void build(int[][] ancestors, int m, int n) {
+        for(int j = 1; j <= m; j++) {
+            for(int i = 0; i < n; i++) {
+                ancestors[i][j] = ancestors[i][j - 1] == -1 ? -1 : ancestors[ancestors[i][j - 1]][j - 1];
             }
-            maxDiameter = Math.max(maxDiameter, h1 + h2);
+        }
+    }
+
+    private static int kthAncestor(int[][] ancestors, int node, int k) {
+
+        int col = 0;
+
+        while(k != 0) {
+            if((k & 1) == 1) {
+                node = ancestors[node][col];
+                if(node == - 1) return node;
+            }
+            col = col + 1;
+            k = k >> 1;
         }
 
-        return h1;
+        return node + 1;
+
     }
 }
